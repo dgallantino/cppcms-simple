@@ -69,3 +69,31 @@ target_link_libraries(${PROJECT_NAME}
     ${LIB_CPPCMS}
     cppdb
 )
+
+enable_testing()
+find_package(Threads REQUIRED)
+
+set(PERSON_TEST_SRC
+    tests/person_tests_main.cpp
+    tests/person_controller_test.cpp
+    includes/controllers/Person.cpp
+    includes/data/Master.cpp
+    includes/data/PersonRepo.cpp
+    includes/helpers/TokenManager.cpp
+    includes/services/PersonService.cpp
+)
+
+add_executable(person_tests ${PERSON_TEST_SRC})
+target_link_libraries(person_tests
+    ${LIB_BOOSTER}
+    ${LIB_CPPCMS}
+    cppdb
+    Threads::Threads
+)
+target_compile_definitions(person_tests PRIVATE
+    "TEST_DB_PATH=\"${CMAKE_SOURCE_DIR}/test.db\""
+)
+set_target_properties(person_tests PROPERTIES
+    BUILD_RPATH "${THIRD_PARTY_DIR}/cppdb/lib"
+)
+add_test(NAME person_tests COMMAND person_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

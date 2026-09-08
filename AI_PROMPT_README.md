@@ -107,3 +107,123 @@ Separate from the model but coupled to it. Runtime SQL for `person` lives here (
 - Do not invent a new `person` table; use the schema above
 
 ---
+
+# Prompt for generating prompt
+ROLE:
+you are a prompt engineer that will create a prompt for cursor coding agent.
+you are not to add detail about spec that the user does NOT asks you to include or find. your job is to get details the user asks you to find and restructure user request into clear and non conflicting prompt. 
+
+USER:
+
+bring in all files that makes up Person CRUD feature in all layer for context:
+- controller
+- services
+- models
+- data
+
+create a prompt for coding-agent to generate unittest and smoke test script that will be run by human to evaluate and debug. 
+
+smoketest script requirement:
+scripts/person-smoketest.sh will mainly smoke test the person REST endpoint on running localhost dev server.
+the script should not start the server.
+default base path is http://localhost:8080/ and semi configurable 
+use something like `BASE_URL="${BASE_URL:-http://localhost:8080}"`
+so
+BASE_URL="https://mypublicdomain.com" ./scripts/person-smoketest.sh to load different base url
+read current @includes/controllers/Auth.cpp and @includes/controllers/User.cpp to know the current auth process.
+print pretty json response if possible.
+use python to do a pretty json print.
+print raw response body when python not available.
+stop the script with a clear error when curl is not available
+
+unittest requirement:
+unittest scope:
+  - full happy path: HTTP Request -> controllers::Person -> PersonService -> models::Person -> PersonRepo -> test.db
+  - controller errors (unauthorized, malformed requests, duplicated email, accessing deleted)
+out of scope:
+  - person services isolation test 
+  - person rep isolation test
+
+use temporary test.db for the tests. 
+unittest should delete if that db exits and crate new.
+
+
+write your prompt by appending it into @AI_PROMPT_README.md 
+
+---
+
+# Task
+
+Generate a **unit test** and a **smoke test script** for the existing Person CRUD feature. A human will run both to evaluate and debug. Do not change Person CRUD behavior, Auth, or User.
+
+## Required context (read these; do not change them)
+
+Person CRUD layers:
+
+- controller: `includes/controllers/Person.h`, `includes/controllers/Person.cpp`
+- service: `includes/services/PersonService.h`, `includes/services/PersonService.cpp`
+- model: `includes/models/Person.h`
+- data: `includes/data/PersonRepo.h`, `includes/data/PersonRepo.cpp`
+
+Auth process (current implementation — use as-is, do not fix):
+
+- `includes/controllers/Auth.cpp` — `POST /auth/login` expects JSON `{"User":{"LoginId":"...","Password":"..."}}`. Success body is `User accepted`. Login does **not** issue a token (`TODO: add jwt token`).
+- `includes/controllers/User.cpp` — token is the `Token` HTTP header (`request().getenv("HTTP_TOKEN")`). `User::getUser` (`GET /users`) **registers** that header value into `TokenManager` via `addToken`. `User::getUserById` **validates** with `TokenManager::getInstance().isValidToken(token)`.
+- Person auth matches `User::getUserById`: `Person::requireAuth` reads `HTTP_TOKEN` and calls `isValidToken`. Unauthorized writes `{"error":"Unauthorized"}`.
+
+Person REST routes (from Person dispatcher + `main.cpp` attach `/person`):
+
+- `GET /person` — list
+- `POST /person` — create
+- `GET /person/{id}` — get by id
+- `PUT /person/{id}` — update
+- `DELETE /person/{id}` — delete
+
+JSON body for create/update: `personName` (required non-empty string), `personEmail` (required non-empty string), `personAddress` (optional string or null).
+
+## Smoke test script
+
+Create `scripts/person-smoketest.sh`.
+
+- Smoke test the Person REST endpoints on an **already running** localhost (or other) server.
+- The script must **not** start the server.
+- Default base URL, overridable:
+
+```bash
+BASE_URL="${BASE_URL:-http://localhost:8080}"
+```
+
+Example:
+
+```bash
+BASE_URL="https://mypublicdomain.com" ./scripts/person-smoketest.sh
+```
+
+- Use the current auth process above (do not invent JWT login). Authenticate the way Auth.cpp / User.cpp actually work today, then call Person endpoints.
+- If `curl` is not available, stop with a clear error.
+- Pretty-print JSON responses with Python when Python is available.
+- If Python is not available, print the raw response body.
+
+## Unit test
+
+**In scope**
+
+- Full happy path through the stack: HTTP Request → `controllers::Person` → `PersonService` → `models::Person` → `PersonRepo` → `test.db`
+- Controller errors:
+  - unauthorized
+  - malformed requests
+  - duplicated email
+  - accessing deleted
+
+**Out of scope**
+
+- PersonService isolation tests
+- PersonRepo isolation tests
+
+**test.db**
+
+- Use a temporary `test.db` for the unit tests.
+- If `test.db` already exists, delete it, then create a new one.
+
+Do not add PersonService-only or PersonRepo-only tests.
+

@@ -20,7 +20,9 @@ set(API_SRC
     includes/controllers/Auth.cpp
     includes/data/Connection.cpp
     includes/data/Master.cpp
+    includes/data/PersonRepo.cpp
     includes/helpers/TokenManager.cpp
+    includes/services/PersonService.cpp
 )
 
 # add_subdirectory(${THIRD_PARTY_DIR}/cppdb/lib)

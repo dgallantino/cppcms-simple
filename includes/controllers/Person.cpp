@@ -80,9 +80,7 @@ static picojson::value personToJson(const models::Person &person)
     obj["personId"] = picojson::value(static_cast<double>(person.personId()));
     obj["personName"] = picojson::value(person.personName());
     obj["personEmail"] = picojson::value(person.personEmail());
-    if (person.personAddressIsNull())
-        obj["personAddress"] = picojson::value();
-    else
+    if (!person.personAddressIsNull())
         obj["personAddress"] = picojson::value(person.personAddress());
     return picojson::value(obj);
 }

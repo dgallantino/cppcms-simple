@@ -18,6 +18,7 @@ set(API_SRC
     main.cpp
     includes/controllers/User.cpp
     includes/controllers/Auth.cpp
+    includes/controllers/Person.cpp
     includes/data/Connection.cpp
     includes/data/Master.cpp
     includes/data/PersonRepo.cpp

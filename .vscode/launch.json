@@ -16,6 +16,20 @@
             "externalConsole": false,
             "MIMode": "lldb",
             "preLaunchTask": "build-debug"
+        },
+                {
+            "name": "C/C++: g++ debug cppcms",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/cppcms_simple",
+            "args": ["-c", "config.json"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "preLaunchTask": "build-debug"
         }
     ]
 }

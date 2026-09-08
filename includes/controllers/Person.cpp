@@ -115,8 +115,8 @@ void Person::writeError(int status, const std::string &message)
 
 void Person::collection()
 {
-    // if (!requireAuth())
-    //     return;
+    if (!requireAuth())
+        return;
 
     std::string method = request().request_method();
     try {
@@ -145,8 +145,8 @@ void Person::collection()
 
 void Person::item(std::string id)
 {
-    // if (!requireAuth())
-    //     return;
+    if (!requireAuth())
+        return;
 
     int personId = std::atoi(id.c_str());
     std::string method = request().request_method();

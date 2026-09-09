@@ -16,21 +16,21 @@ find_path(INC_CPPCMS cppcms/config.h)
 
 set(API_SRC
     main.cpp
-    includes/controllers/User.cpp
-    includes/controllers/Auth.cpp
-    includes/controllers/Person.cpp
-    includes/data/Connection.cpp
-    includes/controllers/Master.cpp
-    includes/data/PersonRepo.cpp
-    includes/helpers/TokenManager.cpp
-    includes/services/PersonService.cpp
+    src/controllers/User.cpp
+    src/controllers/Auth.cpp
+    src/controllers/Person.cpp
+    src/data/Connection.cpp
+    src/controllers/Master.cpp
+    src/data/PersonRepo.cpp
+    src/helpers/TokenManager.cpp
+    src/services/PersonService.cpp
 )
 
 # add_subdirectory(${THIRD_PARTY_DIR}/cppdb/lib)
 
 include_directories(${INC_BOOSTER})
 include_directories(${INC_CPPCMS})
-include_directories(${CMAKE_SOURCE_DIR}/includes)
+include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${THIRD_PARTY_DIR}/cppdb/include)
 include_directories(${THIRD_PARTY_DIR}/picojson)
 
@@ -96,11 +96,11 @@ find_package(Threads REQUIRED)
 set(PERSON_TEST_SRC
     tests/person_tests_main.cpp
     tests/person_controller_test.cpp
-    includes/controllers/Person.cpp
-    includes/controllers/Master.cpp
-    includes/data/PersonRepo.cpp
-    includes/helpers/TokenManager.cpp
-    includes/services/PersonService.cpp
+    src/controllers/Person.cpp
+    src/controllers/Master.cpp
+    src/data/PersonRepo.cpp
+    src/helpers/TokenManager.cpp
+    src/services/PersonService.cpp
 )
 
 add_executable(person_tests ${PERSON_TEST_SRC})

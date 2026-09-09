@@ -1,31 +1,9 @@
 #include "person_controller_test.h"
 #include "check.h"
 #include "http_client.h"
-#include <picojson.h>
+#include "json_util.h"
 #include <sstream>
 #include <string>
-
-static picojson::value parse_json(const std::string &body)
-{
-    picojson::value root;
-    std::string err;
-    picojson::parse(root, body.c_str(), body.c_str() + body.size(), &err);
-    CHECK(err.empty());
-    return root;
-}
-
-static int json_int(const picojson::value &v, const char *key)
-{
-    CHECK(v.contains(key));
-    return static_cast<int>(v.get(key).get<double>());
-}
-
-static std::string json_str(const picojson::value &v, const char *key)
-{
-    CHECK(v.contains(key));
-    CHECK(v.get(key).is<std::string>());
-    return v.get(key).get<std::string>();
-}
 
 void test_person_happy_path()
 {

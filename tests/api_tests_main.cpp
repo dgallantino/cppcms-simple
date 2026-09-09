@@ -1,7 +1,11 @@
 #include "check.h"
 #include "http_client.h"
 #include "person_controller_test.h"
+#include "auth_controller_test.h"
+#include "user_controller_test.h"
+#include <controllers/Auth.h>
 #include <controllers/Person.h>
+#include <controllers/User.h>
 #include <cppcms/application.h>
 #include <cppcms/applications_pool.h>
 #include <cppcms/json.h>
@@ -9,40 +13,31 @@
 #include <cppcms/url_mapper.h>
 #include <cppdb/frontend.h>
 #include <helpers/TokenManager.h>
-#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <thread>
 
-#ifndef TEST_DB_PATH
-#define TEST_DB_PATH "test.db"
-#endif
+static cppdb::session *g_test_sql = 0;
 
-class PersonTestApp : public cppcms::application
+class ApiTestApp : public cppcms::application
 {
 public:
-    PersonTestApp(cppcms::service &srv) : cppcms::application(srv)
+    ApiTestApp(cppcms::service &srv) : cppcms::application(srv)
     {
-        attach(new Person(srv), "person", "/person/{1}",
+        attach(new User(srv, *g_test_sql), "users", "/users/{1}",
+               "/users(/(.*))?", 1);
+        attach(new Auth(srv, *g_test_sql), "auth", "/auth/{1}",
+               "/auth(/(.*))?", 1);
+        attach(new Person(srv, *g_test_sql), "person", "/person/{1}",
                "/person(/(.*))?", 1);
         mapper().root("/");
     }
 };
 
-static void remove_if_exists(const std::string &path)
+static void create_schema(cppdb::session &sql)
 {
-    std::remove(path.c_str());
-}
-
-static void recreate_test_db(const std::string &path)
-{
-    remove_if_exists(path);
-    remove_if_exists(path + "-wal");
-    remove_if_exists(path + "-shm");
-
-    cppdb::session sql(std::string("sqlite3:db=") + path);
     sql << "CREATE TABLE IF NOT EXISTS \"person\" ("
            "\"personId\" INTEGER NOT NULL,"
            "\"personName\" TEXT NOT NULL,"
@@ -51,9 +46,27 @@ static void recreate_test_db(const std::string &path)
            "PRIMARY KEY(\"personId\" AUTOINCREMENT)"
            ")"
         << cppdb::exec;
+
+    sql << "CREATE TABLE IF NOT EXISTS users ("
+           "usrsId INTEGER PRIMARY KEY AUTOINCREMENT,"
+           "usrsFirstName TEXT,"
+           "usrsLastName TEXT,"
+           "usrsLoginId TEXT,"
+           "usrsLoginPass TEXT,"
+           "usrsCreatedTime TIMESTAMP,"
+           "usrsUpdatedTime TEXT,"
+           "usrsIsBlocked INTEGER,"
+           "usrsDeletedTime TIMESTAMP"
+           ")"
+        << cppdb::exec;
+
+    sql << "INSERT INTO users (usrsFirstName, usrsLastName, usrsLoginId, usrsLoginPass, "
+           "usrsCreatedTime, usrsUpdatedTime, usrsIsBlocked) "
+           "VALUES ('Admin', 'Test', 'admin', 'admin1234', '2024-07-01 00:00:00', '', 0)"
+        << cppdb::exec;
 }
 
-static cppcms::json::value test_settings(const std::string &dbPath)
+static cppcms::json::value test_settings()
 {
     std::ostringstream ss;
     ss << "{"
@@ -64,8 +77,7 @@ static cppcms::json::value test_settings(const std::string &dbPath)
        << "\"worker_threads\":1,"
        << "\"disable_global_exit_handling\":true"
        << "},"
-       << "\"http\":{\"script_names\":[\"/\"]},"
-       << "\"cppcms_simple\":{\"connection_string\":\"sqlite3:db=" << dbPath << "\"}"
+       << "\"http\":{\"script_names\":[\"/\"]}"
        << "}";
     std::istringstream in(ss.str());
     cppcms::json::value conf;
@@ -79,20 +91,21 @@ static cppcms::json::value test_settings(const std::string &dbPath)
 
 int main()
 {
-    const std::string dbPath = TEST_DB_PATH;
+    cppdb::session sql("sqlite3:db=:memory:");
     try {
-        recreate_test_db(dbPath);
+        create_schema(sql);
     } catch (const std::exception &e) {
-        std::cerr << "failed to create " << dbPath << ": " << e.what() << std::endl;
+        std::cerr << "failed to create :memory: schema: " << e.what() << std::endl;
         return 1;
     }
+    g_test_sql = &sql;
 
     TokenManager::getInstance().clearAllTokens();
     TokenManager::getInstance().addToken(TEST_TOKEN, "{\"role\":\"test\"}");
 
-    cppcms::json::value conf = test_settings(dbPath);
+    cppcms::json::value conf = test_settings();
     cppcms::service srv(conf);
-    srv.applications_pool().mount(cppcms::applications_factory<PersonTestApp>());
+    srv.applications_pool().mount(cppcms::applications_factory<ApiTestApp>());
 
     std::thread worker([&srv]() {
         try {
@@ -116,14 +129,24 @@ int main()
     test_person_duplicate_email();
     test_person_accessing_deleted();
 
+    test_auth_login_logout();
+    test_auth_invalid_and_malformed();
+
+    test_user_happy_path();
+    test_user_unauthorized();
+    test_user_malformed();
+    test_user_duplicate_login_id();
+    test_user_accessing_deleted();
+
     srv.shutdown();
     worker.join();
     TokenManager::getInstance().clearAllTokens();
+    g_test_sql = 0;
 
     if (g_failures > 0) {
         std::cerr << g_failures << " check(s) failed" << std::endl;
         return 1;
     }
-    std::cout << "person_tests: all checks passed" << std::endl;
+    std::cout << "api_tests: all checks passed" << std::endl;
     return 0;
 }

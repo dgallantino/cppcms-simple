@@ -5,3 +5,7 @@ build
 compile_commands.json
 test.db
 test.db-*
+
+# in-source leftovers if bundle is not staged under build/
+/bundle/
+/cppcms-simple-bundle.tar.gz

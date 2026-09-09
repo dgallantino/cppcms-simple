@@ -33,7 +33,17 @@ include_directories(${INC_CPPCMS})
 include_directories(${CMAKE_SOURCE_DIR}/includes)
 include_directories(${THIRD_PARTY_DIR}/cppdb/include)
 include_directories(${THIRD_PARTY_DIR}/picojson)
-link_directories(${THIRD_PARTY_DIR}/cppdb/lib)
+
+# Link cppdb by full path so CMake does not inject an absolute -rpath from link_directories().
+if(EXISTS "${THIRD_PARTY_DIR}/cppdb/lib/libcppdb.so")
+    set(CPPDB_SHARED_LIB "${THIRD_PARTY_DIR}/cppdb/lib/libcppdb.so")
+elseif(EXISTS "${THIRD_PARTY_DIR}/cppdb/lib/libcppdb.dylib")
+    set(CPPDB_SHARED_LIB "${THIRD_PARTY_DIR}/cppdb/lib/libcppdb.dylib")
+else()
+    message(FATAL_ERROR "Bundled cppdb shared library not found under ${THIRD_PARTY_DIR}/cppdb/lib")
+endif()
+add_library(cppdb SHARED IMPORTED)
+set_target_properties(cppdb PROPERTIES IMPORTED_LOCATION "${CPPDB_SHARED_LIB}")
 
 add_executable(${PROJECT_NAME} ${API_SRC})
 
@@ -61,6 +71,16 @@ if(APPLE)
             ${THIRD_PARTY_DIR}/cppdb/lib/libcppdb_mysql.0.dylib
             $<TARGET_FILE:${PROJECT_NAME}>
         COMMENT "Updating library paths to use bundled libraries"
+    )
+endif()
+
+if(UNIX AND NOT APPLE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        BUILD_RPATH "\$ORIGIN/lib"
+        INSTALL_RPATH "\$ORIGIN/lib"
+        BUILD_RPATH_USE_ORIGIN TRUE
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH_USE_LINK_PATH FALSE
     )
 endif()
 
@@ -97,3 +117,42 @@ set_target_properties(person_tests PROPERTIES
     BUILD_RPATH "${THIRD_PARTY_DIR}/cppdb/lib"
 )
 add_test(NAME person_tests COMMAND person_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
+install(FILES
+    "${CMAKE_SOURCE_DIR}/config.json"
+    "${CMAKE_SOURCE_DIR}/compose.yaml"
+    "${CMAKE_SOURCE_DIR}/Dockerfile"
+    "${CMAKE_SOURCE_DIR}/BUNDLE.md"
+    DESTINATION .
+)
+install(FILES "${CMAKE_SOURCE_DIR}/db.db" DESTINATION . RENAME db.db.example)
+
+if(UNIX AND NOT APPLE)
+    # install(FILES) in this CMake does not accept FOLLOW_SYMLINK_CHAIN;
+    # file(COPY) does, and copies the real .so plus SONAME links.
+    function(install_so_chain lib dest)
+        get_filename_component(_abs "${lib}" ABSOLUTE)
+        install(CODE "
+            set(_dest \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${dest}\")
+            file(MAKE_DIRECTORY \"\${_dest}\")
+            file(COPY \"${_abs}\" DESTINATION \"\${_dest}\" FOLLOW_SYMLINK_CHAIN)
+        ")
+    endfunction()
+    install_so_chain("${LIB_BOOSTER}" lib)
+    install_so_chain("${LIB_CPPCMS}" lib)
+    install_so_chain("${CPPDB_SHARED_LIB}" lib)
+endif()
+
+set(BUNDLE_STAGE "${CMAKE_BINARY_DIR}/bundle")
+set(BUNDLE_TARBALL "${CMAKE_BINARY_DIR}/cppcms-simple-bundle.tar.gz")
+add_custom_target(bundle
+    DEPENDS ${PROJECT_NAME}
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${BUNDLE_STAGE}"
+    COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --prefix "${BUNDLE_STAGE}"
+    COMMAND ${CMAKE_COMMAND} -E chdir "${BUNDLE_STAGE}"
+            ${CMAKE_COMMAND} -E tar czf "${BUNDLE_TARBALL}" .
+    BYPRODUCTS "${BUNDLE_TARBALL}"
+    COMMENT "Installing runtime tree into ${BUNDLE_STAGE} and packing ${BUNDLE_TARBALL}"
+    VERBATIM
+)

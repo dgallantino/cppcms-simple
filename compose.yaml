@@ -1,0 +1,16 @@
+services:
+  cppcms_simple:
+    image: cppcms-simple-runtime:fedora44
+    build:
+      context: .
+    working_dir: /app
+    volumes:
+      - ./cppcms_simple:/app/cppcms_simple:ro
+      - ./config.json:/app/config.json:ro
+      - ./db.db:/app/db.db
+      - ./lib:/app/lib:ro
+    environment:
+      LD_LIBRARY_PATH: /app/lib
+    ports:
+      - "8080:8080"
+    command: ["./cppcms_simple", "-c", "config.json"]

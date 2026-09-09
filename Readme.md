@@ -29,7 +29,35 @@ If those steps are not working due to cppdb dynamic libs, do this workaround to 
 
 ### How to run on Linux
 
-- TODO LIST
+Build and run locally (Fedora 44 x86-64):
+
+1. Install CppCMS/Booster into `/usr/local` (or another prefix `find_library` can see)
+2. `mkdir -p build && cmake -S . -B build && cmake --build build`
+3. `./build/cppcms_simple -c config.json`
+
+### Deploy with Compose (no git on the VM)
+
+On the local **build** machine:
+
+```sh
+cmake -S . -B build
+cmake --build build --target bundle
+```
+
+That writes `build/bundle/` and `build/cppcms-simple-bundle.tar.gz`. Copy only the tarball to the VM.
+
+On the VM (Docker Compose or Podman Compose; both are equivalent):
+
+```sh
+mkdir -p cppcms-simple
+tar -xzf cppcms-simple-bundle.tar.gz -C cppcms-simple
+cd cppcms-simple
+cp db.db.example db.db   # first deploy only; do not overwrite an existing db.db
+docker compose up --build
+# or: podman compose up --build
+```
+
+See `BUNDLE.md` inside the archive for SELinux notes. The container image does not compile C++.
 
 ### How to run on Windows
 

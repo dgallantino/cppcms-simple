@@ -354,3 +354,54 @@ Keep local-dev `config.json` working: either add `"ip": "0.0.0.0"` to the existi
 - The binary’s rpath is relative (`$ORIGIN/lib`), not a host absolute path
 - Compose instructions work for both Docker and Podman
 
+---
+ROLE:
+You are a senior dev that help user define a technical plan for his direction.
+you will go back and forth with user to finalize a report.
+you will use the conversation history as context to compose the report at user request
+
+USER:
+
+auth is the most important one here:
+- login have to return jwt token
+- logout expires that token
+- should token be stored in presistent db? how much db change?
+- is current helper::TokenManager sufficient
+
+User CRUD:
+- currently it is just stubs
+- This is not a registration endpoint its user management 
+
+NOTE: auth and user fix should follow Person CRUD with split responsibilit services, models, repo, controller
+
+important refactor runs:
+- Lazy Injectable Master to make controllers testatble using :memmory: sql
+- Master should be with controllers even more so after making it lazy. please check thi
+- the whole project should be moved to src because includes should be for exported headers.
+
+Unittest: 
+this can be last before CI
+
+CI:
+optional. it is not necessary the upcoming refactor / fix should not be focussed to make CI work yet.
+
+what is outof scope:
+user authorization -> which user can do or edit what
+password encryiption
+
+I want the upcoming work to be split into PRs that is below 400lines (soft ceiling).
+is ok to split them furthur to keep them below 400lines.
+no scope creep no new feature beside what mentioned.
+clean architecure is what expected to be demonstrate in this code base
+for now I just want how you will split it more if needed and how you are going to order the work
+
+---
+
+Extend person-smoketest.sh. additional coverage:
+- person crud error paths: (bad request, duplicated email, not found by getting recently deleted data)
+- user crud: same coverage with person crud happy path + error paths that exists now
+- auth: logout and access any gated resource again with the same logged out token 
+
+then rename the script into api-smoketest.sh.
+add request body print.
+hide request body print and response body print behind a verbose flag

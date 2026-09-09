@@ -6,15 +6,15 @@
 #include <cppcms/http_request.h>
 #include <picojson.h>
 #include <cstdlib>
-#include <helpers/TokenManager.h>
 
-Person::Person(cppcms::service &srv) : Master(srv), personService_(sql())
+Person::Person(cppcms::service &srv)
+    : Master(srv), authService_(sql()), personService_(sql())
 {
     mapUrls();
 }
 
 Person::Person(cppcms::service &srv, cppdb::session &sql)
-    : Master(srv, sql), personService_(sql)
+    : Master(srv, sql), authService_(sql), personService_(sql)
 {
     mapUrls();
 }
@@ -30,9 +30,8 @@ void Person::mapUrls()
 
 bool Person::requireAuth()
 {
-    TokenManager& tokenManager = TokenManager::getInstance();
     std::string token = request().getenv("HTTP_TOKEN");
-    if (tokenManager.isValidToken(token))
+    if (authService_.isValidToken(token))
         return true;
     writeError(cppcms::http::response::unauthorized, "Unauthorized");
     return false;

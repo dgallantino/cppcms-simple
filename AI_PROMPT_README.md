@@ -405,3 +405,11 @@ Extend person-smoketest.sh. additional coverage:
 then rename the script into api-smoketest.sh.
 add request body print.
 hide request body print and response body print behind a verbose flag
+
+---
+
+Update @Readme.md 
+
+- add test section: include unittest and smoketest. step by step how to compile it and execute it. smoketest script usage. follow the style of the upper portion of the file
+
+- available endpoints. inspect current available endpoints: /user /person /auth add them all to readme with detail

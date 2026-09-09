@@ -24,6 +24,7 @@ set(API_SRC
     src/data/PersonRepo.cpp
     src/data/UserRepo.cpp
     src/helpers/TokenManager.cpp
+    src/services/AuthService.cpp
     src/services/PersonService.cpp
 )
 
@@ -100,7 +101,9 @@ set(PERSON_TEST_SRC
     src/controllers/Person.cpp
     src/controllers/Master.cpp
     src/data/PersonRepo.cpp
+    src/data/UserRepo.cpp
     src/helpers/TokenManager.cpp
+    src/services/AuthService.cpp
     src/services/PersonService.cpp
 )
 

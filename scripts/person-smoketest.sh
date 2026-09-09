@@ -20,6 +20,17 @@ pretty_json() {
     fi
 }
 
+extract_token() {
+    local body="$1"
+    if command -v python3 >/dev/null 2>&1; then
+        printf '%s' "$body" | python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])'
+    elif command -v python >/dev/null 2>&1; then
+        printf '%s' "$body" | python -c 'import json,sys; print(json.load(sys.stdin)["token"])'
+    else
+        printf '%s' "$body" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p' | head -n 1
+    fi
+}
+
 extract_person_id() {
     local body="$1"
     if command -v python3 >/dev/null 2>&1; then
@@ -81,18 +92,24 @@ request() {
     LAST_BODY="$body"
 }
 
-TOKEN="smoke-$(date +%s)-$$"
-EMAIL="smoke-${TOKEN}@example.com"
+TOKEN=""
+EMAIL="smoke-$(date +%s)-$$@example.com"
 LAST_BODY=""
 
 echo "BASE_URL=${BASE_URL}"
-echo "Token=${TOKEN}"
 echo
-echo "Seeding token via GET /users (User::getUser registers HTTP Token header)."
-echo "POST /auth/login is not used; it does not issue a token."
+echo "Seeding token via POST /auth/login."
 echo
 
-request 200 GET "${BASE_URL}/users"
+LOGIN_BODY='{"User":{"LoginId":"admin","Password":"admin1234"}}'
+request 200 POST "${BASE_URL}/auth/login" "$LOGIN_BODY"
+TOKEN="$(extract_token "$LAST_BODY")"
+if [[ -z "${TOKEN}" ]]; then
+    echo "error: could not read token from login response" >&2
+    exit 1
+fi
+echo "Token=${TOKEN}"
+echo
 
 CREATE_BODY=$(printf '{"personName":"Smoke Test","personEmail":"%s","personAddress":"1 Smoke St"}' "$EMAIL")
 request 201 POST "${BASE_URL}/person" "$CREATE_BODY"

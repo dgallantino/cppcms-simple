@@ -5,6 +5,7 @@
 #include <cppcms/service.h>
 #include <controllers/Master.h>
 #include <models/Person.h>
+#include <services/AuthService.h>
 #include <services/PersonService.h>
 #include <string>
 #include <vector>
@@ -32,6 +33,7 @@ private:
     void writePersonList(const std::vector<models::Person> &people);
     void writeError(int status, const std::string &message);
 
+    AuthService authService_;
     PersonService personService_;
 };
 

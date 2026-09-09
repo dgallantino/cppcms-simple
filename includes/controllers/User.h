@@ -3,7 +3,7 @@
 
 #include <cppcms/application.h>
 #include <cppcms/service.h>
-#include <data/Master.h>
+#include <controllers/Master.h>
 
 using database::Master;
 

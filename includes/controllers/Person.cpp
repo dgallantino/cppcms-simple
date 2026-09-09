@@ -10,6 +10,17 @@
 
 Person::Person(cppcms::service &srv) : Master(srv), personService_(sql())
 {
+    mapUrls();
+}
+
+Person::Person(cppcms::service &srv, cppdb::session &sql)
+    : Master(srv, sql), personService_(sql)
+{
+    mapUrls();
+}
+
+void Person::mapUrls()
+{
     dispatcher().assign("", &Person::collection, this);
     mapper().assign("");
 

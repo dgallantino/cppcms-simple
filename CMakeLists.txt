@@ -20,7 +20,7 @@ set(API_SRC
     includes/controllers/Auth.cpp
     includes/controllers/Person.cpp
     includes/data/Connection.cpp
-    includes/data/Master.cpp
+    includes/controllers/Master.cpp
     includes/data/PersonRepo.cpp
     includes/helpers/TokenManager.cpp
     includes/services/PersonService.cpp
@@ -97,7 +97,7 @@ set(PERSON_TEST_SRC
     tests/person_tests_main.cpp
     tests/person_controller_test.cpp
     includes/controllers/Person.cpp
-    includes/data/Master.cpp
+    includes/controllers/Master.cpp
     includes/data/PersonRepo.cpp
     includes/helpers/TokenManager.cpp
     includes/services/PersonService.cpp

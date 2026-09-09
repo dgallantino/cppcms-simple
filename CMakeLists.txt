@@ -22,6 +22,7 @@ set(API_SRC
     src/data/Connection.cpp
     src/controllers/Master.cpp
     src/data/PersonRepo.cpp
+    src/data/UserRepo.cpp
     src/helpers/TokenManager.cpp
     src/services/PersonService.cpp
 )

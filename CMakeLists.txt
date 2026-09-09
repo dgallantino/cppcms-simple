@@ -96,8 +96,8 @@ target_link_libraries(${PROJECT_NAME}
 enable_testing()
 find_package(Threads REQUIRED)
 
-set(PERSON_TEST_SRC
-    tests/person_tests_main.cpp
+set(API_TEST_SRC
+    tests/api_tests_main.cpp
     tests/person_controller_test.cpp
     tests/auth_controller_test.cpp
     tests/user_controller_test.cpp
@@ -113,17 +113,17 @@ set(PERSON_TEST_SRC
     src/services/UserService.cpp
 )
 
-add_executable(person_tests ${PERSON_TEST_SRC})
-target_link_libraries(person_tests
+add_executable(api_tests ${API_TEST_SRC})
+target_link_libraries(api_tests
     ${LIB_BOOSTER}
     ${LIB_CPPCMS}
     cppdb
     Threads::Threads
 )
-set_target_properties(person_tests PROPERTIES
+set_target_properties(api_tests PROPERTIES
     BUILD_RPATH "${THIRD_PARTY_DIR}/cppdb/lib"
 )
-add_test(NAME person_tests COMMAND person_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME api_tests COMMAND api_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
 install(FILES

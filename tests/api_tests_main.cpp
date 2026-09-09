@@ -147,6 +147,6 @@ int main()
         std::cerr << g_failures << " check(s) failed" << std::endl;
         return 1;
     }
-    std::cout << "person_tests: all checks passed" << std::endl;
+    std::cout << "api_tests: all checks passed" << std::endl;
     return 0;
 }

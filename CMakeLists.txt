@@ -99,13 +99,18 @@ find_package(Threads REQUIRED)
 set(PERSON_TEST_SRC
     tests/person_tests_main.cpp
     tests/person_controller_test.cpp
+    tests/auth_controller_test.cpp
+    tests/user_controller_test.cpp
     src/controllers/Person.cpp
+    src/controllers/Auth.cpp
+    src/controllers/User.cpp
     src/controllers/Master.cpp
     src/data/PersonRepo.cpp
     src/data/UserRepo.cpp
     src/helpers/TokenManager.cpp
     src/services/AuthService.cpp
     src/services/PersonService.cpp
+    src/services/UserService.cpp
 )
 
 add_executable(person_tests ${PERSON_TEST_SRC})
@@ -114,9 +119,6 @@ target_link_libraries(person_tests
     ${LIB_CPPCMS}
     cppdb
     Threads::Threads
-)
-target_compile_definitions(person_tests PRIVATE
-    "TEST_DB_PATH=\"${CMAKE_SOURCE_DIR}/test.db\""
 )
 set_target_properties(person_tests PROPERTIES
     BUILD_RPATH "${THIRD_PARTY_DIR}/cppdb/lib"

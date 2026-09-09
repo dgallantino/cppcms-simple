@@ -26,6 +26,7 @@ set(API_SRC
     src/helpers/TokenManager.cpp
     src/services/AuthService.cpp
     src/services/PersonService.cpp
+    src/services/UserService.cpp
 )
 
 # add_subdirectory(${THIRD_PARTY_DIR}/cppdb/lib)
